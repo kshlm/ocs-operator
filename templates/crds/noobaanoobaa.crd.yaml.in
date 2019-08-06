@@ -1,0 +1,1 @@
+{{if .Converged}}{{index .NBO.CRDStrings "noobaas.noobaa.io"}}{{end}}

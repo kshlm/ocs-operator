@@ -45,6 +45,7 @@ type templateData struct {
 	CreatedAt       string
 	OCS             *operatorData
 	RCO             *operatorData
+	NBO             *operatorData
 }
 
 func check(err error) {
@@ -135,7 +136,7 @@ func getOCS(data *templateData) {
 	writer = strings.Builder{}
 	err = marshallObject(ocsdeployment.Spec, &writer)
 	check(err)
-	deploymentSpec := fixResourceString(writer.String(), 12)
+	deploymentSpec := fixResourceString(writer.String(), 10)
 
 	// Get OCS Role
 	writer = strings.Builder{}
@@ -150,7 +151,7 @@ func getOCS(data *templateData) {
 		err := marshallObject(rule, &writer)
 		check(err)
 	}
-	rules := fixResourceString(writer.String(), 14)
+	rules := fixResourceString(writer.String(), 10)
 
 	data.OCS.Deployment = deployment
 	data.OCS.DeploymentSpec = deploymentSpec
@@ -194,20 +195,20 @@ func getRCO(data *templateData) {
 	writer := strings.Builder{}
 
 	// Get RCO Deployment
-	ocsdeployment := ocscomponents.GetRookCephDeployment(
+	rcodeployment := ocscomponents.GetRookCephDeployment(
 		"quay.io",
 		data.RCO.OperatorTag,
 		"Always",
 	)
-	err := marshallObject(ocsdeployment, &writer)
+	err := marshallObject(rcodeployment, &writer)
 	check(err)
 	deployment := writer.String()
 
 	// Get RCO DeploymentSpec for CSV
 	writer = strings.Builder{}
-	err = marshallObject(ocsdeployment.Spec, &writer)
+	err = marshallObject(rcodeployment.Spec, &writer)
 	check(err)
-	deploymentSpec := fixResourceString(writer.String(), 12)
+	deploymentSpec := fixResourceString(writer.String(), 10)
 
 	data.RCO.Roles = make(map[string]string)
 	data.RCO.RoleRules = make(map[string]string)
@@ -222,12 +223,12 @@ func getRCO(data *templateData) {
 
 		// Get the Rules out of RCO ClusterRole
 		writer = strings.Builder{}
-		ocsrules := role.Rules
-		for _, rule := range ocsrules {
+		rcorules := role.Rules
+		for _, rule := range rcorules {
 			err := marshallObject(rule, &writer)
 			check(err)
 		}
-		rules := fixResourceString(writer.String(), 14)
+		rules := fixResourceString(writer.String(), 10)
 		data.RCO.RoleRules[role.ObjectMeta.Name] = rules
 	}
 
@@ -244,12 +245,12 @@ func getRCO(data *templateData) {
 
 		// Get the Rules out of RCO ClusterRole
 		writer = strings.Builder{}
-		ocsrules := role.Rules
-		for _, rule := range ocsrules {
+		rcorules := role.Rules
+		for _, rule := range rcorules {
 			err := marshallObject(rule, &writer)
 			check(err)
 		}
-		rules := fixResourceString(writer.String(), 14)
+		rules := fixResourceString(writer.String(), 10)
 		data.RCO.ClusterRoleRules[role.ObjectMeta.Name] = rules
 	}
 
@@ -271,6 +272,83 @@ func getRCO(data *templateData) {
 	data.RCO.DeploymentSpec = deploymentSpec
 }
 
+func getNBO(data *templateData) {
+	writer := strings.Builder{}
+
+	// Get Noobaa Deployment
+	nbodeployment := ocscomponents.GetNoobaaDeployment(
+		"quay.io",
+		data.NBO.OperatorTag,
+		"Always",
+	)
+	err := marshallObject(nbodeployment, &writer)
+	check(err)
+	deployment := writer.String()
+
+	// Get Noobaa DeploymentSpec for CSV
+	writer = strings.Builder{}
+	err = marshallObject(nbodeployment.Spec, &writer)
+	check(err)
+	deploymentSpec := fixResourceString(writer.String(), 10)
+
+	// Get NBO Role
+	writer = strings.Builder{}
+	role := ocscomponents.GetNoobaaRole()
+	marshallObject(role, &writer)
+	roleString := writer.String()
+
+	// Get the Rules out of NBO Role
+	writer = strings.Builder{}
+	rcorules := role.Rules
+	for _, rule := range rcorules {
+		err := marshallObject(rule, &writer)
+		check(err)
+	}
+	rules := fixResourceString(writer.String(), 10)
+
+	// Get NBO ClusterRole
+	writer = strings.Builder{}
+	clusterRole := ocscomponents.GetNoobaaClusterRole()
+	marshallObject(clusterRole, &writer)
+	clusterRoleString := writer.String()
+
+	// Get the Rules out of NBO Role
+	writer = strings.Builder{}
+	nboClusterRules := clusterRole.Rules
+	for _, rule := range nboClusterRules {
+		err := marshallObject(rule, &writer)
+		check(err)
+	}
+	clusterRules := fixResourceString(writer.String(), 10)
+
+	data.NBO.Deployment = deployment
+	data.NBO.DeploymentSpec = deploymentSpec
+
+	data.NBO.Roles = make(map[string]string)
+	data.NBO.RoleRules = make(map[string]string)
+	data.NBO.Roles[role.ObjectMeta.Name] = roleString
+	data.NBO.RoleRules[role.ObjectMeta.Name] = rules
+
+	data.NBO.ClusterRoles = make(map[string]string)
+	data.NBO.ClusterRoleRules = make(map[string]string)
+	data.NBO.ClusterRoles[role.ObjectMeta.Name] = clusterRoleString
+	data.NBO.ClusterRoleRules[role.ObjectMeta.Name] = clusterRules
+
+	data.NBO.CRDs = make(map[string]*extv1beta1.CustomResourceDefinition)
+	data.NBO.CRDStrings = make(map[string]string)
+
+	// Get Noobaa CRDs
+	crds := ocscomponents.GetNoobaaCRDs()
+	for _, crd := range crds {
+		writer = strings.Builder{}
+		marshallObject(crd, &writer)
+		crdString := writer.String()
+
+		data.NBO.CRDs[crd.ObjectMeta.Name] = crd
+		data.NBO.CRDStrings[crd.ObjectMeta.Name] = crdString
+	}
+}
+
 func main() {
 	converged := flag.Bool("converged", false, "")
 	namespace := flag.String("namespace", "storageclusters", "")
@@ -282,6 +360,7 @@ func main() {
 	containerTag := flag.String("container-tag", "latest", "")
 	ocsTag := flag.String("ocs-tag", *containerTag, "")
 	rcoTag := flag.String("rco-tag", *containerTag, "")
+	nboTag := flag.String("nbo-tag", *containerTag, "")
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.CommandLine.ParseErrorsWhitelist.UnknownFlags = true
@@ -302,6 +381,7 @@ func main() {
 
 		OCS: &operatorData{OperatorTag: *ocsTag, ComponentTag: *ocsTag},
 		RCO: &operatorData{OperatorTag: *rcoTag, ComponentTag: *rcoTag},
+		NBO: &operatorData{OperatorTag: *nboTag, ComponentTag: *nboTag},
 	}
 	data.CreatedAt = time.Now().String()
 
@@ -310,6 +390,9 @@ func main() {
 
 	// Load in all RCO Resources
 	getRCO(&data)
+
+	// Load in all Noobaa Resources
+	getNBO(&data)
 
 	if *inputFile == "" {
 		panic("Must specify input file")

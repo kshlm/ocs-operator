@@ -65,14 +65,18 @@ func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv
 										},
 									},
 								},
-								InitialDelaySeconds: 5,
-								PeriodSeconds:       5,
+								InitialDelaySeconds: 4,
+								PeriodSeconds:       10,
 								FailureThreshold:    1,
 							},
 							Env: []corev1.EnvVar{
 								{
-									Name:  "OPERATOR_NAME",
-									Value: operatorName,
+									Name: "WATCH_NAMESPACE",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
 								},
 								{
 									Name: "POD_NAME",
@@ -83,12 +87,8 @@ func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv
 									},
 								},
 								{
-									Name: "WATCH_NAMESPACE",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "metadata.namespace",
-										},
-									},
+									Name:  "OPERATOR_NAME",
+									Value: operatorName,
 								},
 							},
 						},
@@ -105,7 +105,7 @@ func GetRole() *rbacv1.Role {
 	role := &rbacv1.Role{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
-			Kind:       "ClusterRole",
+			Kind:       "Role",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: operatorName,
@@ -149,11 +149,10 @@ func GetRole() *rbacv1.Role {
 					"deployments",
 					"daemonsets",
 					"replicasets",
-					"statefulesets",
+					"statefulsets",
 				},
 				Verbs: []string{
-					"get",
-					"create",
+					"*",
 				},
 			},
 			{
@@ -173,9 +172,9 @@ func GetRole() *rbacv1.Role {
 					"ocs.openshift.io",
 				},
 				Resources: []string{
+					"*",
 					"storageclusters",
 					"ocsinitializations",
-					"*",
 				},
 				Verbs: []string{
 					"*",
@@ -187,6 +186,7 @@ func GetRole() *rbacv1.Role {
 				},
 				Resources: []string{
 					"cephclusters",
+					"ocsinitialization",
 				},
 				Verbs: []string{
 					"create",

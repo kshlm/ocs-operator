@@ -73,6 +73,10 @@ func GetRookCephDeployment(repository string, tag string, imagePullPolicy string
 									Value: "INFO",
 								},
 								{
+									Name:  "ROOK_CEPH_STATUS_CHECK_INTERVAL",
+									Value: "60s",
+								},
+								{
 									Name:  "ROOK_MON_HEALTHCHECK_INTERVAL",
 									Value: "45s",
 								},
@@ -86,7 +90,7 @@ func GetRookCephDeployment(repository string, tag string, imagePullPolicy string
 								},
 								{
 									Name:  "ROOK_HOSTPATH_REQUIRES_PRIVILEGED",
-									Value: "true",
+									Value: "false",
 								},
 								{
 									Name:  "ROOK_ENABLE_SELINUX_RELABELING",
@@ -682,6 +686,7 @@ func GetRookCephCRDs() []*extv1beta1.CustomResourceDefinition {
 												Minimum: float64ptr(0),
 											},
 										},
+										Required: []string{"count"},
 									},
 									"network": extv1beta1.JSONSchemaProps{
 										Properties: map[string]extv1beta1.JSONSchemaProps{
@@ -693,10 +698,13 @@ func GetRookCephCRDs() []*extv1beta1.CustomResourceDefinition {
 									"storage": extv1beta1.JSONSchemaProps{
 										Properties: map[string]extv1beta1.JSONSchemaProps{
 											"nodes": extv1beta1.JSONSchemaProps{
+												Items: &extv1beta1.JSONSchemaPropsOrArray{
+													Schema: &extv1beta1.JSONSchemaProps{
+													},
+												},
 												Type: "array",
 											},
 											"useAllDevices": extv1beta1.JSONSchemaProps{
-												Type: "boolean",
 											},
 											"useAllNodes": extv1beta1.JSONSchemaProps{
 												Type: "boolean",
