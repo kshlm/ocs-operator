@@ -77,6 +77,21 @@ Run `make ocs-registry` to generate the registry bundle container image.
 
 ## Install
 
+### Pre-install requirements
+
+Nodes need to have the label `cluster.ocs.openshift.io/storage` and be tainted with `node.ocs.openshift.io/openshift-storage=true` to allow OCS pods to be scheduled on them.
+
+In a regular openshift-installer deployment on AWS with 3 masters and 3 worker, do the following for each worker node,
+```console
+$ oc label node <node-name> cluster.ocs.openshift.io/storage=true
+$ kubectl taint node <node-name> node.ocs.openshift.io/openshift-storage=true:PreferNoSchedule
+```
+
+We taint nodes with 'PerferNoSchedule' here to allow other pods to be scheduled on the worker nodes. In a real-life deployment with dedicated nodes for storage the taint would be set to 'NoSchedule'.
+
+
+### Installation via OLM
+
 The OCS operator can be installed into an OpenShift cluster using the OLM.
 
 For quick install using pre-built container images, deploy the [deploy-olm.yaml](deploy/deploy-with-olm.yaml) manifest.
@@ -100,12 +115,14 @@ $ oc get csv -n openshift-storage
 NAME                  DISPLAY                                VERSION   REPLACES   PHASE
 ocs-operator.v0.0.1   Openshift Container Storage Operator   0.0.1                Succeeded
 ```
+
 This can take a few minutes. Once PHASE says `Succeeded` you can create
 a StorageCluster by following command:
 
 ```console
 $ oc create -f ./deploy/crds/ocs_v1alpha1_storagecluster_cr.yaml
 ```
+
 
 ### Installation of development builds
 
