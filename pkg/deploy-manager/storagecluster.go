@@ -82,28 +82,28 @@ func DefaultStorageCluster() (*ocsv1.StorageCluster, error) {
 			// default resource requirements
 			Resources: map[string]corev1.ResourceRequirements{
 				"mon": corev1.ResourceRequirements{
-					Requests: corev1.ResourceList{},
-					Limits:   corev1.ResourceList{},
+					Requests: make(corev1.ResourceList),
+					Limits:   make(corev1.ResourceList),
 				},
 				"mds": corev1.ResourceRequirements{
-					Requests: corev1.ResourceList{},
-					Limits:   corev1.ResourceList{},
+					Requests: make(corev1.ResourceList),
+					Limits:   make(corev1.ResourceList),
 				},
 				"rgw": corev1.ResourceRequirements{
-					Requests: corev1.ResourceList{},
-					Limits:   corev1.ResourceList{},
+					Requests: make(corev1.ResourceList),
+					Limits:   make(corev1.ResourceList),
 				},
 				"mgr": corev1.ResourceRequirements{
-					Requests: corev1.ResourceList{},
-					Limits:   corev1.ResourceList{},
+					Requests: make(corev1.ResourceList),
+					Limits:   make(corev1.ResourceList),
 				},
 				"noobaa-core": corev1.ResourceRequirements{
-					Requests: corev1.ResourceList{},
-					Limits:   corev1.ResourceList{},
+					Requests: make(corev1.ResourceList),
+					Limits:   make(corev1.ResourceList),
 				},
 				"noobaa-db": corev1.ResourceRequirements{
-					Requests: corev1.ResourceList{},
-					Limits:   corev1.ResourceList{},
+					Requests: make(corev1.ResourceList),
+					Limits:   make(corev1.ResourceList),
 				},
 			},
 			StorageDeviceSets: []ocsv1.StorageDeviceSet{
@@ -112,8 +112,8 @@ func DefaultStorageCluster() (*ocsv1.StorageCluster, error) {
 					Count:    MinOSDsCount,
 					Portable: true,
 					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{},
-						Limits:   corev1.ResourceList{},
+						Requests: make(corev1.ResourceList),
+						Limits:   make(corev1.ResourceList),
 					},
 					DataPVCTemplate: k8sv1.PersistentVolumeClaim{
 						Spec: k8sv1.PersistentVolumeClaimSpec{
