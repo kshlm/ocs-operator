@@ -17,7 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/reference"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func (r *ReconcileStorageCluster) ensureNoobaaSystem(sc *ocsv1.StorageCluster, reqLogger logr.Logger) error {
@@ -26,14 +25,9 @@ func (r *ReconcileStorageCluster) ensureNoobaaSystem(sc *ocsv1.StorageCluster, r
 
 	cephClusterCreated := false
 
-	err := controllerutil.SetControllerReference(sc, nb, r.scheme)
-	if err != nil {
-		return nil
-	}
-
 	// find cephCluster
 	foundCeph := &cephv1.CephCluster{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: generateNameForCephCluster(sc), Namespace: sc.Namespace}, foundCeph)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: generateNameForCephCluster(sc), Namespace: sc.Namespace}, foundCeph)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			reqLogger.Info("Waiting on ceph cluster to be created before starting noobaa")

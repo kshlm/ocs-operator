@@ -13,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // ensureStorageClasses ensures that StorageClass resources exist in the desired
@@ -101,13 +100,6 @@ func (r *ReconcileStorageCluster) newStorageClasses(initData *ocsv1.StorageClust
 		},
 	}
 
-	for _, obj := range ret {
-		err := controllerutil.SetControllerReference(initData, obj, r.scheme)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return ret, nil
 }
 
@@ -185,12 +177,7 @@ func (r *ReconcileStorageCluster) newCephObjectStoreInstances(initData *ocsv1.St
 			},
 		},
 	}
-	for _, obj := range ret {
-		err := controllerutil.SetControllerReference(initData, obj, r.scheme)
-		if err != nil {
-			return nil, err
-		}
-	}
+
 	return ret, nil
 }
 
@@ -255,12 +242,7 @@ func (r *ReconcileStorageCluster) newCephBlockPoolInstances(initData *ocsv1.Stor
 			},
 		},
 	}
-	for _, obj := range ret {
-		err := controllerutil.SetControllerReference(initData, obj, r.scheme)
-		if err != nil {
-			return nil, err
-		}
-	}
+
 	return ret, nil
 }
 
@@ -322,12 +304,6 @@ func (r *ReconcileStorageCluster) newCephObjectStoreUserInstances(initData *ocsv
 				Store:       generateNameForCephObjectStore(initData),
 			},
 		},
-	}
-	for _, obj := range ret {
-		err := controllerutil.SetControllerReference(initData, obj, r.scheme)
-		if err != nil {
-			return nil, err
-		}
 	}
 	return ret, nil
 }
@@ -408,11 +384,6 @@ func (r *ReconcileStorageCluster) newCephFilesystemInstances(initData *ocsv1.Sto
 			},
 		},
 	}
-	for _, obj := range ret {
-		err := controllerutil.SetControllerReference(initData, obj, r.scheme)
-		if err != nil {
-			return nil, err
-		}
-	}
+
 	return ret, nil
 }

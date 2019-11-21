@@ -20,7 +20,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/tools/reference"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
@@ -161,9 +160,6 @@ func (r *ReconcileStorageCluster) Reconcile(request reconcile.Request) (reconcil
 
 			scinit.Name = request.Name
 			scinit.Namespace = request.Namespace
-			if err = controllerutil.SetControllerReference(instance, scinit, r.scheme); err != nil {
-				return reconcile.Result{}, err
-			}
 
 			err = r.client.Create(context.TODO(), scinit)
 			switch {
@@ -514,10 +510,10 @@ func determinePlacementRack(nodes *corev1.NodeList, node corev1.Node, minRacks i
 // the desired state.
 func (r *ReconcileStorageCluster) ensureCephConfig(sc *ocsv1.StorageCluster, reqLogger logr.Logger) error {
 	ownerRef := metav1.OwnerReference{
-		UID:                sc.UID,
-		APIVersion:         sc.APIVersion,
-		Kind:               sc.Kind,
-		Name:               sc.Name,
+		UID:        sc.UID,
+		APIVersion: sc.APIVersion,
+		Kind:       sc.Kind,
+		Name:       sc.Name,
 	}
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -535,7 +531,8 @@ func (r *ReconcileStorageCluster) ensureCephConfig(sc *ocsv1.StorageCluster, req
 	if err != nil {
 		if errors.IsNotFound(err) {
 			reqLogger.Info("Creating Ceph ConfigMap")
-			err = r.client.Create(context.TODO(), cm); if err != nil {
+			err = r.client.Create(context.TODO(), cm)
+			if err != nil {
 				return err
 			}
 		}
@@ -561,11 +558,6 @@ func (r *ReconcileStorageCluster) ensureCephConfig(sc *ocsv1.StorageCluster, req
 func (r *ReconcileStorageCluster) ensureCephCluster(sc *ocsv1.StorageCluster, reqLogger logr.Logger) error {
 	// Define a new CephCluster object
 	cephCluster := newCephCluster(sc, r.cephImage)
-
-	// Set StorageCluster instance as the owner and controller
-	if err := controllerutil.SetControllerReference(sc, cephCluster, r.scheme); err != nil {
-		return err
-	}
 
 	// Check if this CephCluster already exists
 	found := &cephv1.CephCluster{}
